@@ -7,7 +7,13 @@ PostgreSQLとpgvectorを使用してベクトルの保存と検索を行いま�
 import logging
 import psycopg2
 import json
+import os
+from dotenv import load_dotenv
 from typing import List, Dict, Any, Optional
+
+# .envの読み込み
+load_dotenv()
+EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "1024"))
 
 
 class VectorDatabase:
@@ -86,7 +92,7 @@ class VectorDatabase:
             cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
             # ドキュメントテーブルの作成
-            cursor.execute("""
+            cursor.execute(f"""
                 CREATE TABLE IF NOT EXISTS documents (
                     id SERIAL PRIMARY KEY,
                     document_id TEXT UNIQUE NOT NULL,
@@ -94,7 +100,7 @@ class VectorDatabase:
                     file_path TEXT NOT NULL,
                     chunk_index INTEGER NOT NULL,
                     metadata JSONB,
-                    embedding vector(1024),
+                    embedding vector({EMBEDDING_DIM}),
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """)
