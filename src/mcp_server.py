@@ -5,11 +5,11 @@ Model Context Protocol (MCP)に準拠したサーバーを提供します。
 JSON-RPC over stdioを使用してクライアントからのリクエストを処理します。
 """
 
+import sys
 import json
 import logging
-import sys
-from pathlib import Path
 from typing import Any, Callable, Dict, List
+from pathlib import Path
 
 
 class MCPServer:
@@ -41,9 +41,7 @@ class MCPServer:
         file_handler.setLevel(logging.INFO)
 
         # フォーマッタの設定
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         file_handler.setFormatter(formatter)
 
         # ハンドラの追加
@@ -179,9 +177,7 @@ class MCPServer:
                     result = self.tool_handlers[method](params)
                     self._send_result(result, request_id)
                 except Exception as e:
-                    self._send_error(
-                        -32603, f"Tool execution error: {str(e)}", request_id
-                    )
+                    self._send_error(-32603, f"Tool execution error: {str(e)}", request_id)
             else:
                 self._send_error(-32601, f"Method not found: {method}", request_id)
 
@@ -197,9 +193,7 @@ class MCPServer:
         client_name = params.get("client_name", "unknown")
         client_version = params.get("client_version", "unknown")
 
-        self.logger.info(
-            f"クライアント '{client_name} {client_version}' が接続しました"
-        )
+        self.logger.info(f"クライアント '{client_name} {client_version}' が接続しました")
 
         # サーバーの機能を返す
         response = {
@@ -292,9 +286,7 @@ class MCPServer:
             return
 
         if "arguments" not in params:
-            self._send_error(
-                -32602, "Invalid params: arguments is required", request_id
-            )
+            self._send_error(-32602, "Invalid params: arguments is required", request_id)
             return
 
         tool_name = params["name"]
@@ -311,9 +303,7 @@ class MCPServer:
                     content = [{"type": "text", "text": str(result)}]
                     self._send_result({"content": content}, request_id)
             except Exception as e:
-                self.logger.error(
-                    f"ツール '{tool_name}' の実行中にエラーが発生しました: {str(e)}"
-                )
+                self.logger.error(f"ツール '{tool_name}' の実行中にエラーが発生しました: {str(e)}")
                 self._send_result(
                     {
                         "content": [
@@ -329,9 +319,7 @@ class MCPServer:
         else:
             self._send_result(
                 {
-                    "content": [
-                        {"type": "text", "text": f"ツールが見つかりません: {tool_name}"}
-                    ],
+                    "content": [{"type": "text", "text": f"ツールが見つかりません: {tool_name}"}],
                     "isError": True,
                 },
                 request_id,
@@ -347,9 +335,7 @@ class MCPServer:
         tools = self._get_tools()
         self._send_result({"tools": tools}, request_id)
 
-    def _handle_notifications_initialized(
-        self, params: Dict[str, Any], request_id: Any
-    ):
+    def _handle_notifications_initialized(self, params: Dict[str, Any], request_id: Any):
         """
         notifications/initializedメソッドを処理します。
         クライアントの初期化完了通知を処理します。
