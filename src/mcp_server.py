@@ -8,7 +8,7 @@ JSON-RPC over stdioを使用してクライアントからのリクエストを�
 import sys
 import json
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Dict, Any, List, Callable
 from pathlib import Path
 
 
@@ -47,13 +47,7 @@ class MCPServer:
         # ハンドラの追加
         self.logger.addHandler(file_handler)
 
-    def register_tool(
-        self,
-        name: str,
-        description: str,
-        input_schema: Dict[str, Any],
-        handler: Callable,
-    ):
+    def register_tool(self, name: str, description: str, input_schema: Dict[str, Any], handler: Callable):
         """
         ツールを登録します。
 
@@ -71,12 +65,7 @@ class MCPServer:
         self.tool_handlers[name] = handler
         self.logger.info(f"ツール '{name}' を登録しました")
 
-    def start(
-        self,
-        server_name: str = "mcp-server-python",
-        version: str = "0.1.0",
-        description: str = "Python MCP Server",
-    ):
+    def start(self, server_name: str = "mcp-server-python", version: str = "0.1.0", description: str = "Python MCP Server"):
         """
         サーバーを起動し、stdioからのリクエストをリッスンします。
 
@@ -198,15 +187,8 @@ class MCPServer:
         # サーバーの機能を返す
         response = {
             "protocolVersion": "2024-11-05",
-            "serverInfo": {
-                "name": "mcp-server-python",
-                "version": "0.1.0",
-                "description": "Python MCP Server",
-            },
-            "capabilities": {
-                "tools": {"listChanged": False},
-                "resources": {"listChanged": False, "subscribe": False},
-            },
+            "serverInfo": {"name": "mcp-server-python", "version": "0.1.0", "description": "Python MCP Server"},
+            "capabilities": {"tools": {"listChanged": False}, "resources": {"listChanged": False, "subscribe": False}},
             "instructions": "Python MCPサーバーを使用する際の注意点:\n1. 各ツールの入力パラメータを確認してください。\n2. エラーが発生した場合はログを確認してください。",
         }
 
@@ -244,11 +226,7 @@ class MCPServer:
             message: エラーメッセージ
             request_id: リクエストID
         """
-        response = {
-            "jsonrpc": "2.0",
-            "error": {"code": code, "message": message},
-            "id": request_id,
-        }
+        response = {"jsonrpc": "2.0", "error": {"code": code, "message": message}, "id": request_id}
 
         self._send_response(response)
 
@@ -306,23 +284,14 @@ class MCPServer:
                 self.logger.error(f"ツール '{tool_name}' の実行中にエラーが発生しました: {str(e)}")
                 self._send_result(
                     {
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"ツールの実行中にエラーが発生しました: {str(e)}",
-                            }
-                        ],
+                        "content": [{"type": "text", "text": f"ツールの実行中にエラーが発生しました: {str(e)}"}],
                         "isError": True,
                     },
                     request_id,
                 )
         else:
             self._send_result(
-                {
-                    "content": [{"type": "text", "text": f"ツールが見つかりません: {tool_name}"}],
-                    "isError": True,
-                },
-                request_id,
+                {"content": [{"type": "text", "text": f"ツールが見つかりません: {tool_name}"}], "isError": True}, request_id
             )
 
     def _handle_tools_list(self, request_id: Any):
