@@ -52,7 +52,7 @@ uv sync
 
 ```bash
 # pgvectorを含むPostgreSQLコンテナを起動
-docker run --name postgres-pgvector -e POSTGRES_PASSWORD=password -p 5432:5432 -d pgvector/pgvector:pg14
+docker run --name postgres-pgvector -e POSTGRES_PASSWORD=password -p 5432:5432 -d pgvector/pgvector:pg17
 ```
 
 #### データベースの作成
@@ -292,7 +292,7 @@ docker cp postgres-pgvector:/tmp/ragdb_backup.dump ./ragdb_backup.dump
 
 ```bash
 # Dockerを使用する場合
-docker run --name postgres-pgvector -e POSTGRES_PASSWORD=password -p 5432:5432 -d pgvector/pgvector:pg14
+docker run --name postgres-pgvector -e POSTGRES_PASSWORD=password -p 5432:5432 -d pgvector/pgvector:pg17
 
 # データベースを作成
 docker exec -it postgres-pgvector psql -U postgres -c "CREATE DATABASE ragdb;"

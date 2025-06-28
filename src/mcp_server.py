@@ -153,6 +153,12 @@ class MCPServer:
             self._handle_tools_list(request_id)
         elif method == "tools/call":
             self._handle_tools_call(params, request_id)
+        elif method == "notifications/initialized":
+            self._handle_notifications_initialized(params, request_id)
+        elif method == "resources/list":
+            self._handle_resources_list(request_id)
+        elif method == "resources/templates/list":
+            self._handle_resources_templates_list(request_id)
         else:
             # 登録されたツールを直接呼び出す
             if method in self.tool_handlers:
@@ -298,11 +304,57 @@ class MCPServer:
         tools = self._get_tools()
         self._send_result({"tools": tools}, request_id)
 
+    def _handle_notifications_initialized(self, params: Dict[str, Any], request_id: Any):
+        """
+        notifications/initializedメソッドを処理します。
+        クライアントの初期化完了通知を処理します。
+
+        Args:
+            params: リクエストパラメータ
+            request_id: リクエストID
+        """
+        self.logger.info("クライアントの初期化が完了しました")
+        # 通知なのでレスポンスは不要
+        # ただし、エラーが発生した場合はエラーレスポンスを返す必要がある
+        if request_id is not None:
+            self._send_result({}, request_id)
+
+    def _handle_resources_list(self, request_id: Any):
+        """
+        resources/listメソッドを処理します。
+        利用可能なリソースの一覧を返します。
+
+        Args:
+            request_id: リクエストID
+        """
+        resources = self._get_resources()
+        self._send_result({"resources": resources}, request_id)
+
+    def _handle_resources_templates_list(self, request_id: Any):
+        """
+        resources/templates/listメソッドを処理します。
+        利用可能なリソーステンプレートの一覧を返します。
+
+        Args:
+            request_id: リクエストID
+        """
+        templates = self._get_resource_templates()
+        self._send_result({"templates": templates}, request_id)
+
     def _get_resources(self) -> List[Dict[str, Any]]:
         """
         サーバーが提供するリソースの一覧を取得します。
 
         Returns:
             リソースの一覧
+        """
+        return []
+
+    def _get_resource_templates(self) -> List[Dict[str, Any]]:
+        """
+        サーバーが提供するリソーステンプレートの一覧を取得します。
+
+        Returns:
+            リソーステンプレートの一覧
         """
         return []

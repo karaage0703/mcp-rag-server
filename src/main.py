@@ -13,7 +13,6 @@ import logging
 from dotenv import load_dotenv
 
 from .mcp_server import MCPServer
-from .example_tool import register_example_tools
 from .rag_tools import register_rag_tools, create_rag_service_from_env
 
 
@@ -55,9 +54,6 @@ def main():
     try:
         # MCPサーバーの作成
         server = MCPServer()
-
-        # サンプルツールの登録
-        register_example_tools(server)
 
         # RAGサービスの作成と登録
         logger.info("RAGサービスを初期化しています...")
