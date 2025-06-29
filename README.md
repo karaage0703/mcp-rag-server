@@ -17,7 +17,7 @@ MCP RAG Serverは、Model Context Protocol (MCP)に準拠したRAG（Retrieval-A
   - 複数形式のドキュメント（マークダウン、テキスト、パワーポイント、PDF）の読み込みと解析
   - 階層構造を持つソースディレクトリに対応
   - markitdownライブラリを使用したパワーポイントやPDFからのマークダウン変換
-  - multilingual-e5-largeモデルを使用したエンベディング生成
+  - 選択可能なエンベディングモデル（multilingual-e5-large、ruriなど）を使用したエンベディング生成
   - PostgreSQLのpgvectorを使用したベクトルデータベース
   - ベクトル検索による関連情報の取得
   - 前後のチャンク取得機能（コンテキストの連続性を確保）
@@ -87,8 +87,51 @@ POSTGRES_DB=ragdb
 SOURCE_DIR=./data/source
 PROCESSED_DIR=./data/processed
 
-# エンベディングモデル
+# エンベディングモデル設定
 EMBEDDING_MODEL=intfloat/multilingual-e5-large
+EMBEDDING_DIM=1024
+EMBEDDING_PREFIX_QUERY="query: "
+EMBEDDING_PREFIX_EMBEDDING="passage: "
+```
+
+## エンベディングモデルの設定
+
+このサーバーでは、環境変数でエンベディングモデルを選択できます。
+
+### サポートされているモデル
+
+#### multilingual-e5-large（デフォルト）
+```env
+EMBEDDING_MODEL=intfloat/multilingual-e5-large
+EMBEDDING_DIM=1024
+EMBEDDING_PREFIX_QUERY="query: "
+EMBEDDING_PREFIX_EMBEDDING="passage: "
+```
+
+#### cl-nagoya/ruri-v3-30m
+```env
+EMBEDDING_MODEL=cl-nagoya/ruri-v3-30m
+EMBEDDING_DIM=256
+EMBEDDING_PREFIX_QUERY="検索クエリ: "
+EMBEDDING_PREFIX_EMBEDDING="検索文書: "
+```
+
+### プレフィックスについて
+
+多くのエンベディングモデル（特にE5系）では、テキストの種類に応じてプレフィックスを付けることで性能が向上します：
+
+- **検索クエリ用**: `EMBEDDING_PREFIX_QUERY` - ユーザーの検索クエリに自動で追加
+- **文書用**: `EMBEDDING_PREFIX_EMBEDDING` - インデックス化される文書に自動で追加
+
+プレフィックスは自動で処理されるため、MCPクライアントは意識する必要がありません。
+
+### モデル変更時の注意
+
+エンベディングモデルを変更した場合は、ベクトル次元が変わる可能性があるため、既存のインデックスをクリアして再作成してください：
+
+```bash
+python -m src.cli clear
+python -m src.cli index
 ```
 
 ## 使い方
@@ -155,28 +198,50 @@ python -m src.cli index -i
 python -m src.cli count
 ```
 
-### Cline/Cursorでの設定
+### MCPホストでの設定
 
-Cline/CursorなどのAIツールでMCPサーバーを使用するには、`mcp_settings.json`ファイルに以下のような設定を追加します：
+MCPホスト（Claude Desktop、Cline、Cursorなど）でこのサーバーを使用するには、以下のような設定を行います。設定するjsonファイルについては、各MCPホストの　ドキュメントを参照してください。
+
+#### 設定例
 
 ```json
-"mcp-rag-server": {
-  "command": "uv",
-  "args": [
-    "run",
-    "--directory",
-    "/path/to/mcp-rag-server",
-    "python",
-    "-m",
-    "src.main"
-  ],
-  "env": {},
-  "disabled": false,
-  "alwaysAllow": []
+{
+  "mcpServers": {
+    "mcp-rag-server": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "/path/to/mcp-rag-server",
+        "python",
+        "-m",
+        "src.main"
+      ]
+    }
+  }
 }
 ```
 
-`/path/to/mcp-rag-server`は、このリポジトリのインストールディレクトリに置き換えてください。
+#### 設定のポイント
+
+- `command`: `uv`（推奨）または`python`
+- `args`: 実行引数の配列
+- `/path/to/mcp-rag-server`: このリポジトリの実際のパスに置き換えてください
+
+#### uvを使用しない場合
+
+uvがインストールされていない環境では、通常のPythonを使用できます：
+
+```json
+{
+  "command": "python",
+  "args": [
+    "-m",
+    "src.main"
+  ],
+  "cwd": "/path/to/mcp-rag-server"
+}
+```
 
 ## RAGツールの使用方法
 
