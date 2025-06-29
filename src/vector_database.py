@@ -455,31 +455,34 @@ class VectorDatabase:
         """
         データベースをクリアします（全てのドキュメントを削除）。
 
-        Returns:
-            削除されたドキュメントの数
-
         Raises:
             Exception: クリアに失敗した場合
+
+        Returns:
+            削除されたドキュメントの数。テーブルをDROPするため、削除前の数を返します。
         """
         try:
             # 接続がない場合は接続
             if not self.connection:
                 self.connect()
 
+            # 削除前のドキュメント数を取得
+            count_before_delete = self.get_document_count()
+
             # カーソルの作成
             cursor = self.connection.cursor()
 
-            # 全てのドキュメントを削除
-            cursor.execute("DELETE FROM documents;")
-
-            # 削除された行数を取得
-            deleted_rows = cursor.rowcount
+            # テーブルを削除してスキーマもクリア
+            cursor.execute("DROP TABLE IF EXISTS documents;")
 
             # コミット
             self.connection.commit()
 
-            self.logger.info(f"データベースをクリアしました（{deleted_rows} 個のドキュメントを削除）")
-            return deleted_rows
+            if count_before_delete > 0:
+                self.logger.info(f"データベースをクリアしました（documentsテーブルを削除、{count_before_delete} 個のドキュメントが対象でした）")
+            else:
+                self.logger.info("データベースをクリアしました（documentsテーブルを削除）")
+            return count_before_delete
 
         except Exception as e:
             # ロールバック
@@ -518,6 +521,11 @@ class VectorDatabase:
             self.logger.info(f"データベース内のドキュメント数: {count}")
             return count
 
+        except psycopg2.errors.UndefinedTable:
+            # テーブルが存在しない場合は0を返す
+            self.connection.rollback()  # エラー状態をリセット
+            self.logger.info("documentsテーブルが存在しないため、ドキュメント数は0です")
+            return 0
         except Exception as e:
             self.logger.error(f"ドキュメント数の取得中にエラーが発生しました: {str(e)}")
             raise
