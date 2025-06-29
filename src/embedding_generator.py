@@ -5,8 +5,13 @@
 """
 
 import logging
+import os
 from typing import List
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+
+# .envの読み込み
+load_dotenv()
 
 
 class EmbeddingGenerator:
@@ -20,25 +25,50 @@ class EmbeddingGenerator:
         logger: ロガー
     """
 
-    def __init__(self, model_name: str = "intfloat/multilingual-e5-large"):
+    def __init__(self, model_name: str = None):
         """
         EmbeddingGeneratorのコンストラクタ
 
         Args:
-            model_name: 使用するモデル名（デフォルト: "intfloat/multilingual-e5-large"）
+            model_name: 使用するモデル名（.env優先）
         """
+        # .envから設定を取得
+        self.model_name = os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-large")
+        self.prefix_query = os.getenv("EMBEDDING_PREFIX_QUERY", "")
+        self.prefix_embedding = os.getenv("EMBEDDING_PREFIX_EMBEDDING", "")
+
         # ロガーの設定
         self.logger = logging.getLogger("embedding_generator")
         self.logger.setLevel(logging.INFO)
 
         # モデルの読み込み
-        self.logger.info(f"モデル '{model_name}' を読み込んでいます...")
+        self.logger.info(f"モデル '{self.model_name}' を読み込んでいます...")
         try:
-            self.model = SentenceTransformer(model_name)
-            self.logger.info(f"モデル '{model_name}' を読み込みました")
+            self.model = SentenceTransformer(self.model_name)
+            self.logger.info(f"モデル '{self.model_name}' を読み込みました")
         except Exception as e:
-            self.logger.error(f"モデル '{model_name}' の読み込みに失敗しました: {str(e)}")
+            self.logger.error(f"モデル '{self.model_name}' の読み込みに失敗しました: {str(e)}")
             raise
+
+    def _add_prefix(self, text: str, prefix: str) -> str:
+        """
+        テキストに適切なプレフィックスを追加する
+
+        Args:
+            text: 元のテキスト
+            prefix: 追加するプレフィックス
+
+        Returns:
+            プレフィックス付きのテキスト
+        """
+        if not prefix:
+            return text
+
+        # プレフィックスが既に含まれているかチェック（大文字小文字を区別）
+        if text.startswith(prefix):
+            return text
+
+        return f"{prefix}{text}"
 
     def generate_embedding(self, text: str) -> List[float]:
         """
@@ -55,19 +85,11 @@ class EmbeddingGenerator:
             return []
 
         try:
-            # テキストの前処理
-            # multilingual-e5-largeモデルの場合、クエリには "query: " プレフィックスを追加
-            processed_text = f"query: {text}" if "query" not in text.lower() else text
-
-            # エンベディングの生成
+            processed_text = self._add_prefix(text, self.prefix_embedding)
             embedding = self.model.encode(processed_text)
-
-            # numpy配列をリストに変換
             embedding_list = embedding.tolist()
-
             self.logger.debug(f"テキスト '{text[:50]}...' のエンベディングを生成しました")
             return embedding_list
-
         except Exception as e:
             self.logger.error(f"エンベディングの生成中にエラーが発生しました: {str(e)}")
             raise
@@ -87,19 +109,11 @@ class EmbeddingGenerator:
             return []
 
         try:
-            # テキストの前処理
-            # multilingual-e5-largeモデルの場合、クエリには "query: " プレフィックスを追加
-            processed_texts = [f"query: {text}" if "query" not in text.lower() else text for text in texts]
-
-            # エンベディングの生成（バッチ処理）
+            processed_texts = [self._add_prefix(text, self.prefix_embedding) for text in texts]
             embeddings = self.model.encode(processed_texts)
-
-            # numpy配列をリストに変換
             embeddings_list = embeddings.tolist()
-
             self.logger.info(f"{len(texts)} 個のテキストのエンベディングを生成しました")
             return embeddings_list
-
         except Exception as e:
             self.logger.error(f"エンベディングの生成中にエラーが発生しました: {str(e)}")
             raise
@@ -119,18 +133,11 @@ class EmbeddingGenerator:
             return []
 
         try:
-            # multilingual-e5-largeモデルの場合、クエリには "query: " プレフィックスを追加
-            processed_query = f"query: {query}" if "query" not in query.lower() else query
-
-            # エンベディングの生成
+            processed_query = self._add_prefix(query, self.prefix_query)
             embedding = self.model.encode(processed_query)
-
-            # numpy配列をリストに変換
             embedding_list = embedding.tolist()
-
             self.logger.debug(f"クエリ '{query}' のエンベディングを生成しました")
             return embedding_list
-
         except Exception as e:
             self.logger.error(f"クエリエンベディングの生成中にエラーが発生しました: {str(e)}")
             raise

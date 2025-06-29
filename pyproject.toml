@@ -27,6 +27,7 @@ dependencies = [
     "markdown",
     "numpy",
     "markitdown[all]",
+    "sentencepiece>=0.2.0",
 ]
 
 [project.optional-dependencies]

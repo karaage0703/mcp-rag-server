@@ -5,12 +5,17 @@ MCPサーバーに登録するRAG関連ツールを提供します。
 """
 
 import os
+
 from typing import Dict, Any
 
 from .document_processor import DocumentProcessor
 from .embedding_generator import EmbeddingGenerator
 from .vector_database import VectorDatabase
 from .rag_service import RAGService
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def register_rag_tools(server, rag_service: RAGService):
