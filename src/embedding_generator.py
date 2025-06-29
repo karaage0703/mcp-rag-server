@@ -51,9 +51,24 @@ class EmbeddingGenerator:
             raise
 
     def _add_prefix(self, text: str, prefix: str) -> str:
-        if prefix and not text.lower().startswith(prefix.strip().lower()):
-            return f"{prefix}{text}"
-        return text
+        """
+        テキストに適切なプレフィックスを追加する
+
+        Args:
+            text: 元のテキスト
+            prefix: 追加するプレフィックス
+
+        Returns:
+            プレフィックス付きのテキスト
+        """
+        if not prefix:
+            return text
+
+        # プレフィックスが既に含まれているかチェック（大文字小文字を区別）
+        if text.startswith(prefix):
+            return text
+
+        return f"{prefix}{text}"
 
     def generate_embedding(self, text: str) -> List[float]:
         """
