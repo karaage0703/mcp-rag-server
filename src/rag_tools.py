@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def register_rag_tools(server, rag_service: RAGService):
     """
     RAG関連ツールをMCPサーバーに登録します。

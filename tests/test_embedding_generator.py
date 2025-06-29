@@ -1,4 +1,3 @@
-
 import unittest
 from unittest.mock import patch, MagicMock
 import os
@@ -6,16 +5,17 @@ import numpy as np
 
 # `src`ディレクトリをパスに追加して、`embedding_generator`をインポート可能にする
 import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from embedding_generator import EmbeddingGenerator
 
-class TestEmbeddingGenerator(unittest.TestCase):
 
+class TestEmbeddingGenerator(unittest.TestCase):
     def setUp(self):
         """テストケースごとに環境をクリーンアップし、モックを設定"""
         self.env_patcher = patch.dict(os.environ, {}, clear=True)
-        self.mock_sentence_transformer_patcher = patch('embedding_generator.SentenceTransformer')
+        self.mock_sentence_transformer_patcher = patch("embedding_generator.SentenceTransformer")
 
         self.env_patcher.start()
         self.mock_sentence_transformer = self.mock_sentence_transformer_patcher.start()
@@ -25,7 +25,6 @@ class TestEmbeddingGenerator(unittest.TestCase):
         self.mock_sentence_transformer.return_value = self.mock_model_instance
         # encodeが呼ばれたら固定のnumpy配列を返すように設定
         self.mock_model_instance.encode.return_value = np.array([[0.1, 0.2, 0.3]])
-
 
     def tearDown(self):
         """パッチを停止"""
@@ -37,7 +36,7 @@ class TestEmbeddingGenerator(unittest.TestCase):
         test_env = {
             "EMBEDDING_MODEL": "test-model",
             "EMBEDDING_PREFIX_QUERY": "query: ",
-            "EMBEDDING_PREFIX_EMBEDDING": "passage: "
+            "EMBEDDING_PREFIX_EMBEDDING": "passage: ",
         }
         with patch.dict(os.environ, test_env, clear=True):
             generator = EmbeddingGenerator()
@@ -86,5 +85,6 @@ class TestEmbeddingGenerator(unittest.TestCase):
             generator.generate_search_embedding("my query")
             self.mock_model_instance.encode.assert_called_with("query: my query")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

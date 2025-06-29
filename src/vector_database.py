@@ -479,7 +479,9 @@ class VectorDatabase:
             self.connection.commit()
 
             if count_before_delete > 0:
-                self.logger.info(f"データベースをクリアしました（documentsテーブルを削除、{count_before_delete} 個のドキュメントが対象でした）")
+                self.logger.info(
+                    f"データベースをクリアしました（documentsテーブルを削除、{count_before_delete} 個のドキュメントが対象でした）"
+                )
             else:
                 self.logger.info("データベースをクリアしました（documentsテーブルを削除）")
             return count_before_delete
